@@ -41,8 +41,12 @@ class _HomePageState extends State<HomePage> {
         title: Text("Users list"),
         backgroundColor: Colors.purple,
         actions: <Widget>[
-          BlocProvider(create: (context) => HomeBloc()..add(GetAllUsersEvent()),
-          child: BlocConsumer<HomeBloc, HomeState>(
+          
+        ],
+      ),
+      body: BlocProvider(
+        create: (context) => HomeBloc()..add(GetAllUsersEvent()),
+        child: BlocConsumer<HomeBloc, HomeState>(
           listener: (context, state) {
             // para mostrar dialogos o snackbars
             if (state is ErrorState) {
@@ -53,8 +57,11 @@ class _HomePageState extends State<HomePage> {
                 );
             }
           },
-           builder: (context, state) {
-             return DropdownButton<type_Filter>(
+          builder: (context, state) {
+            if (state is ShowUsersState) {
+              return Column(
+                children: <Widget>[
+                  DropdownButton<type_Filter>(
             hint: Text("Aplicar Filtro"),
             value: filterUsed,
             onChanged: (type_Filter Value) {
@@ -64,9 +71,6 @@ class _HomePageState extends State<HomePage> {
                 if(Value.name=="Par"){
                 print("Filtro Par"); 
                 BlocProvider.of<HomeBloc>(context).add(FilterUsersEvent(filterEven: true));
-                if (state is ShowUsersState)
-                setState(() {state.usersList;});
-
                 }else if(Value.name=="Impar"){
                   print("Filtro Impar");
                   BlocProvider.of<HomeBloc>(context).add(FilterUsersEvent(filterEven: false));
@@ -96,44 +100,30 @@ class _HomePageState extends State<HomePage> {
                 ),
               );
             }).toList(),
-          );
-           }
-          ),)
-        ],
-      ),
-      body: BlocProvider(
-        create: (context) => HomeBloc()..add(GetAllUsersEvent()),
-        child: BlocConsumer<HomeBloc, HomeState>(
-          listener: (context, state) {
-            // para mostrar dialogos o snackbars
-            if (state is ErrorState) {
-              Scaffold.of(context)
-                ..hideCurrentSnackBar()
-                ..showSnackBar(
-                  SnackBar(content: Text("Error: ${state.error}")),
-                );
-            }
-          },
-          builder: (context, state) {
-            if (state is ShowUsersState) {
-              return RefreshIndicator(
-                //Done!:nombre del usuario, company name, street y phone | cambiar ListView.builder por ListView.separated
-                child: ListView.separated(
-                  separatorBuilder: (BuildContext context, int index) =>
-                      Divider(),
-                  itemCount: state.usersList.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    return ListTile(
-                      title: Text(
-                          "Id: ${state.usersList[index].id}| ${state.usersList[index].name}"),
-                      subtitle: Text(
-                          "Compañia: ${state.usersList[index].company.name} \n Calle: ${state.usersList[index].address.city}\n Telefono: ${state.usersList[index].phone}"),
-                    );
-                  },
-                ),
-                onRefresh: () async {
-                  BlocProvider.of<HomeBloc>(context).add(GetAllUsersEvent());
-                },
+          ),
+                  Expanded(
+                    flex: 1,
+                                      child: RefreshIndicator(
+                      //Done!:nombre del usuario, company name, street y phone | cambiar ListView.builder por ListView.separated
+                      child: ListView.separated(
+                        separatorBuilder: (BuildContext context, int index) =>
+                            Divider(),
+                        itemCount: state.usersList.length,
+                        itemBuilder: (BuildContext context, int index) {
+                          return ListTile(
+                            title: Text(
+                                "Id: ${state.usersList[index].id}| ${state.usersList[index].name}"),
+                            subtitle: Text(
+                                "Compañia: ${state.usersList[index].company.name} \n Calle: ${state.usersList[index].address.city}\n Telefono: ${state.usersList[index].phone}"),
+                          );
+                        },
+                      ),
+                      onRefresh: () async {
+                        BlocProvider.of<HomeBloc>(context).add(GetAllUsersEvent());
+                      },
+                    ),
+                  ),
+                ],
               );
             } else if (state is LoadingState) {
               return Center(child: CircularProgressIndicator());
